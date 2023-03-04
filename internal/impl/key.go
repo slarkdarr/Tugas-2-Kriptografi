@@ -16,11 +16,14 @@ func NewKey(externalKey string) internal.Key {
 }
 
 func (k key) Generate() [][]byte {
-	//TODO implement me
-	panic("implement me")
+	intermediateKey := k.KeyWhitening()
+	keySchedule := k.KeySchedule(intermediateKey)
+	sBox := k.GenerateSBox(keySchedule)
+
+	return sBox
 }
 
-// KeyWhitening : XORs with constants
+// KeyWhitening : XOR with constants
 func (k key) KeyWhitening() [][]byte {
 	keyByteList := []byte(k.externalKey)
 
@@ -61,4 +64,18 @@ func (k key) KeySchedule(intermediateKey [][]byte) [][]byte {
 	keySchedule := [][]byte{firstBytes, secondBytes, thirdBytes, fourthBytes}
 
 	return keySchedule
+}
+
+// GenerateSBox : XOR key schedule with pi
+func (k key) GenerateSBox(keySchedule [][]byte) [][]byte {
+	// Initialize using fractional portion of pi (.1415926535897932384626433832795028)
+	sBox := [][]byte{{141, 59, 26, 53}, {58, 97, 93, 238}, {46, 26, 43, 38}, {32, 79, 50, 28}}
+
+	var newSBox [][]byte
+	for i, b := range keySchedule {
+		subArray := utils.CalculateXor(b, sBox[i])
+		newSBox = append(newSBox, subArray)
+	}
+
+	return newSBox
 }
