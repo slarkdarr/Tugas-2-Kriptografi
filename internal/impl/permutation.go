@@ -1,6 +1,8 @@
 package impl
 
-import "github.com/slarkdarr/Tugas-2-Kriptografi/internal"
+import (
+	"github.com/slarkdarr/Tugas-2-Kriptografi/internal"
+)
 
 type (
 	permutation struct {
@@ -12,7 +14,7 @@ func NewPermutation() internal.Permutation {
 	return &permutation{}
 }
 
-func (p permutation) Execute(block []uint8) []uint8 {
+func (p permutation) Execute(chunk uint32) uint32 {
 	//TODO implement me
 	panic("implement me")
 }

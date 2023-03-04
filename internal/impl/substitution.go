@@ -1,6 +1,8 @@
 package impl
 
-import "github.com/slarkdarr/Tugas-2-Kriptografi/internal"
+import (
+	"github.com/slarkdarr/Tugas-2-Kriptografi/internal"
+)
 
 type (
 	substitution struct {
@@ -12,7 +14,7 @@ func NewSubstitution() internal.Substitution {
 	return &substitution{}
 }
 
-func (s substitution) Execute(block []uint8) []uint8 {
+func (s substitution) Execute(chunk uint32) uint32 {
 	//TODO implement me
 	panic("implement me")
 }

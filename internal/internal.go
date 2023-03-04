@@ -2,25 +2,19 @@ package internal
 
 type (
 	Cipher interface {
-		Encrypt(plaintext string) []uint8
-		Decrypt(block []uint8) string
+		Encrypt(plaintext, externalKey string) string
+		Decrypt(ciphertext, externalKey string) string
 	}
-)
 
-type (
 	Key interface {
-		Generate() string
+		Generate() []uint32
 	}
-)
 
-type (
 	Substitution interface {
-		Execute(block []uint8) []uint8
+		Execute(chunk uint32) uint32
 	}
-)
 
-type (
 	Permutation interface {
-		Execute(block []uint8) []uint8
+		Execute(chunk uint32) uint32
 	}
 )
