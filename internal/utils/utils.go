@@ -1,11 +1,30 @@
 package utils
 
-import "math"
+import (
+	"encoding/binary"
+	"math"
+)
 
-func CalculateXor(a, b uint32) uint32 {
-	return a ^ b
+func CalculateXor(a, b []byte) []byte {
+	x1 := binary.BigEndian.Uint32(a)
+	x2 := binary.BigEndian.Uint32(b)
+
+	xor := x1 ^ x2
+
+	var result []byte
+	binary.BigEndian.PutUint32(result, xor)
+
+	return result
 }
 
-func CalculateAddMod32(a, b uint32) uint32 {
-	return (a + b) % (uint32(math.MaxUint32) + 1)
+func CalculateAddMod32(a, b []byte) []byte {
+	x1 := binary.BigEndian.Uint32(a)
+	x2 := binary.BigEndian.Uint32(b)
+
+	add := (x1 + x2) % (uint32(math.MaxUint32) + 1)
+
+	var result []byte
+	binary.BigEndian.PutUint32(result, add)
+
+	return result
 }

@@ -12,7 +12,7 @@ func NewKey(externalKey string) internal.Key {
 	return &key{externalKey}
 }
 
-func (k key) Generate() []uint32 {
+func (k key) Generate() [][]byte {
 	//TODO implement me
 	panic("implement me")
 }

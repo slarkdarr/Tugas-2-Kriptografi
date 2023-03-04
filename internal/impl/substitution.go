@@ -14,7 +14,7 @@ func NewSubstitution() internal.Substitution {
 	return &substitution{}
 }
 
-func (s substitution) Execute(chunk uint32) uint32 {
+func (s substitution) Execute(chunk []byte) []byte {
 	//TODO implement me
 	panic("implement me")
 }

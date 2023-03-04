@@ -7,14 +7,14 @@ type (
 	}
 
 	Key interface {
-		Generate() []uint32
+		Generate() [][]byte
 	}
 
 	Substitution interface {
-		Execute(chunk uint32) uint32
+		Execute(chunk []byte) []byte
 	}
 
 	Permutation interface {
-		Execute(chunk uint32) uint32
+		Execute(chunk []byte) []byte
 	}
 )
