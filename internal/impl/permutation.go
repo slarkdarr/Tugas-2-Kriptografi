@@ -16,5 +16,5 @@ func NewPermutation() internal.Permutation {
 
 func (p permutation) Execute(chunk []byte) []byte {
 	//TODO implement me
-	panic("implement me")
+	return chunk
 }

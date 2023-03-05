@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"bytes"
+	"encoding/hex"
 	"github.com/slarkdarr/Tugas-2-Kriptografi/internal"
 	"github.com/slarkdarr/Tugas-2-Kriptografi/internal/utils"
 )
@@ -22,43 +22,55 @@ func NewCipher() internal.Cipher {
 
 func (c cipher) Encrypt(plaintext, externalKey string) string {
 	keys := c.GenerateKeys(externalKey, true)
-	blocks := c.GenerateBlocks(plaintext)
+	blocks := c.GenerateBlocks(plaintext, true)
 
-	var result [][]byte
+	var result []byte
 	for _, block := range blocks {
-		result = append(result, c.Rounds(block, keys, 0))
+		result = append(result, c.Rounds(block, keys, 0, true)...)
 	}
 
-	return string(bytes.Join(result, []byte("")))
+	return hex.EncodeToString(result)
 }
 
 func (c cipher) Decrypt(ciphertext, externalKey string) string {
 	keys := c.GenerateKeys(externalKey, false)
-	blocks := c.GenerateBlocks(ciphertext)
+	blocks := c.GenerateBlocks(ciphertext, false)
 
-	var result [][]byte
+	var result []byte
 	for _, block := range blocks {
-		result = append(result, c.Rounds(block, keys, 0))
+		result = append(result, c.Rounds(block, keys, 0, false)...)
 	}
 
-	return string(bytes.Join(result, []byte("")))
+	return string(result)
 }
 
 func (c cipher) GenerateKeys(externalKey string, encrypt bool) [][]byte {
-	return NewKey(externalKey).Generate()
+	result := NewKey(externalKey).Generate()
+
+	if encrypt {
+		return result
+	}
+
+	var keyList [][]byte
+	for i := len(result) - 1; i > 0; i -= 2 {
+		keyList = append(keyList, result[i-1], result[i])
+	}
+
+	return keyList
 }
 
-func (c cipher) GenerateBlocks(plaintext string) [][]byte {
-	byteList := []byte(plaintext)
+func (c cipher) GenerateBlocks(text string, encrypt bool) [][]byte {
 	blockSize := 16
 
-	remainder := len(byteList) % blockSize
-	if remainder != 0 {
-		padding := make([]byte, blockSize-remainder)
-		byteList = append(byteList, padding...)
+	var byteList []byte
+	if encrypt {
+		byteList = []byte(text)
+	} else {
+		byteList, _ = hex.DecodeString(text)
 	}
 
 	var blocks [][]byte
+
 	for i := 0; i < len(byteList); i += blockSize {
 		end := i + blockSize
 		if end > len(byteList) {
@@ -69,14 +81,19 @@ func (c cipher) GenerateBlocks(plaintext string) [][]byte {
 	return blocks
 }
 
-func (c cipher) Rounds(block []byte, keys [][]byte, round int) []byte {
-	if round > 16 {
+func (c cipher) Rounds(block []byte, keys [][]byte, round int, encrypt bool) []byte {
+	if round >= 16 {
 		return block
 	}
 
-	roundKey := keys[2*round : 2*round+1]
+	roundKey := keys[2*round : 2*round+2]
 
-	x1, x2, x3, x4 := block[0:4], block[4:8], block[8:12], block[12:16]
+	var x1, x2, x3, x4 []byte
+	if encrypt {
+		x1, x2, x3, x4 = block[0:4], block[4:8], block[8:12], block[12:16]
+	} else {
+		x1, x2, x3, x4 = block[8:12], block[12:16], block[0:4], block[4:8]
+	}
 
 	s1 := c.substitution.Execute(x1)
 	s2 := c.substitution.Execute(x2)
@@ -90,10 +107,12 @@ func (c cipher) Rounds(block []byte, keys [][]byte, round int) []byte {
 	p1 := c.permutation.Execute(tmp2)
 	p2 := c.permutation.Execute(tmp1)
 
-	newX1 := utils.CalculateXor(p1, x3)
-	newX2 := utils.CalculateXor(p2, x4)
-	newX3 := x1
-	newX4 := x2
+	var newX1, newX2, newX3, newX4 []byte
+	if encrypt {
+		newX1, newX2, newX3, newX4 = utils.CalculateXor(p1, x3), utils.CalculateXor(p2, x4), x1, x2
+	} else {
+		newX1, newX2, newX3, newX4 = x1, x2, utils.CalculateXor(p1, x3), utils.CalculateXor(p2, x4)
+	}
 
 	var newBlock []byte
 	newBlock = append(newBlock, newX1...)
@@ -101,5 +120,5 @@ func (c cipher) Rounds(block []byte, keys [][]byte, round int) []byte {
 	newBlock = append(newBlock, newX3...)
 	newBlock = append(newBlock, newX4...)
 
-	return c.Rounds(newBlock, keys, round+1)
+	return c.Rounds(newBlock, keys, round+1, encrypt)
 }

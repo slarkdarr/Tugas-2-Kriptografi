@@ -16,5 +16,5 @@ func NewSubstitution() internal.Substitution {
 
 func (s substitution) Execute(chunk []byte) []byte {
 	//TODO implement me
-	panic("implement me")
+	return chunk
 }
