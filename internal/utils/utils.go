@@ -11,7 +11,7 @@ func CalculateXor(a, b []byte) []byte {
 
 	xor := x1 ^ x2
 
-	var result []byte
+	result := make([]byte, 4)
 	binary.BigEndian.PutUint32(result, xor)
 
 	return result
@@ -21,9 +21,9 @@ func CalculateAddMod32(a, b []byte) []byte {
 	x1 := binary.BigEndian.Uint32(a)
 	x2 := binary.BigEndian.Uint32(b)
 
-	add := (x1 + x2) % (uint32(math.MaxUint32) + 1)
+	add := (x1 + x2) % (math.MaxUint32)
 
-	var result []byte
+	result := make([]byte, 4)
 	binary.BigEndian.PutUint32(result, add)
 
 	return result
