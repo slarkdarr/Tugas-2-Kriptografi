@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/slarkdarr/Tugas-2-Kriptografi/internal/impl"
+	"strconv"
+	"time"
 )
 
 func getArrayOfHex(text string) []string {
@@ -26,14 +28,30 @@ func main() {
 		"christo viel d4f",
 		"christo vieldaff",
 		"khristo vieldaff",
-		"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+		"Pak Rinaldi adalah seorang guru kelas kriptografi yang sangat terkenal di kota itu. Setiap minggu, ia selalu memberikan ceramah tentang berbagai teknik kriptografi yang digunakan untuk mengamankan informasi rahasia. Murid-muridnya sangat senang belajar dengan Pak Rinaldi karena ia selalu membuat pelajarannya menarik dan mudah dipahami.\n\nSuatu hari, saat pelajaran berlangsung, tiba-tiba terdengar suara gemerincing dari luar kelas. Pak Rinaldi keluar untuk memeriksanya dan ternyata sebuah kotak pos besar telah tiba. Ia membuka kotak tersebut dan menemukan beberapa mesin enkripsi yang sangat canggih di dalamnya.\n\nPak Rinaldi sangat senang dengan mesin-mesin tersebut dan mengajak murid-muridnya untuk mempelajarinya bersama-sama. Mereka belajar tentang bagaimana cara kerja mesin dan cara menggunakannya untuk mengamankan pesan-pesan rahasia. Pak Rinaldi sangat bangga melihat betapa antusiasnya murid-muridnya dalam mempelajari kriptografi.\n\nHari berikutnya, Pak Rinaldi memberikan tugas kepada murid-muridnya untuk mencoba menggunakan mesin enkripsi yang baru mereka pelajari untuk mengamankan pesan rahasia. Murid-muridnya sangat semangat dan berusaha keras untuk menyelesaikan tugas tersebut dengan baik.\n\nSetelah beberapa hari, Pak Rinaldi memeriksa hasil tugas murid-muridnya dan sangat senang dengan hasilnya. Mereka berhasil mengamankan pesan rahasia dengan menggunakan mesin enkripsi yang baru mereka pelajari.\n\nPak Rinaldi sangat bangga dengan murid-muridnya dan senang melihat betapa mereka begitu antusias belajar tentang kriptografi. Ia berharap suatu hari nanti mereka dapat menjadi ahli kriptografi yang handal dan membantu mengamankan informasi rahasia di seluruh dunia.",
 	}
+
+	// Incase mau coba string gede-gede, dari file aja, tinggal uncomment
+	//f, _ := os.Open("./Termius.dmg")
+	//b, _ := io.ReadAll(f)
+	//testcase = append(testcase, string(b))
+
 	for i, each := range testcase {
-		fmt.Println("Testcase", i, "->", each)
+		start := time.Now()
 		enc := c.Encrypt(each)
-		fmt.Println("E\t: ", enc)
-		fmt.Println("E (HEX)\t: ", getArrayOfHex(enc))
+		encT := time.Now().Sub(start)
+		start = time.Now()
 		dec := c.Decrypt(enc)
-		fmt.Println("D\t: ", dec)
+		decT := time.Now().Sub(start)
+		if len(each) < 200 {
+			fmt.Println("Testcase", i, "->", each)
+			fmt.Println("E\t: ", enc)
+			fmt.Println("E (HEX)\t: ", getArrayOfHex(enc))
+			fmt.Println("D\t: ", dec)
+		} else {
+			fmt.Println("Testcase", i, "("+strconv.Itoa(len(each))+" characters)")
+		}
+		fmt.Println("E(T)\t: ", encT)
+		fmt.Println("D(T)\t: ", decT)
 	}
 }
