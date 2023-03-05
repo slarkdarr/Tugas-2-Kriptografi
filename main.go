@@ -16,7 +16,7 @@ func getArrayOfHex(text string) []string {
 }
 
 func main() {
-	c := impl.NewCipher("asdfgh")
+	c := impl.NewCipher("t6w9z$C&F)H@McQf")
 	testcase := []string{
 		"kriptografi",
 		"kr1ptografi",
@@ -26,6 +26,7 @@ func main() {
 		"christo viel d4f",
 		"christo vieldaff",
 		"khristo vieldaff",
+		"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
 	}
 	for i, each := range testcase {
 		fmt.Println("Testcase", i, "->", each)
