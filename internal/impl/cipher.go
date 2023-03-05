@@ -10,18 +10,20 @@ type (
 	cipher struct {
 		substitution internal.Substitution
 		permutation  internal.Permutation
+		key          internal.Key
 	}
 )
 
-func NewCipher() internal.Cipher {
+func NewCipher(externalKey string) internal.Cipher {
 	return &cipher{
 		substitution: NewSubstitution(),
 		permutation:  NewPermutation(),
+		key:          NewDummyKey(),
 	}
 }
 
-func (c cipher) Encrypt(plaintext, externalKey string) string {
-	keys := c.GenerateKeys(externalKey, true)
+func (c cipher) Encrypt(plaintext string) string {
+	keys := c.GenerateKeys(true)
 	blocks := c.GenerateBlocks(plaintext, true)
 
 	var result []byte
@@ -32,8 +34,8 @@ func (c cipher) Encrypt(plaintext, externalKey string) string {
 	return hex.EncodeToString(result)
 }
 
-func (c cipher) Decrypt(ciphertext, externalKey string) string {
-	keys := c.GenerateKeys(externalKey, false)
+func (c cipher) Decrypt(ciphertext string) string {
+	keys := c.GenerateKeys(false)
 	blocks := c.GenerateBlocks(ciphertext, false)
 
 	var result []byte
@@ -44,9 +46,8 @@ func (c cipher) Decrypt(ciphertext, externalKey string) string {
 	return string(result)
 }
 
-func (c cipher) GenerateKeys(externalKey string, encrypt bool) [][]byte {
-	result := NewKey(externalKey).Generate()
-
+func (c cipher) GenerateKeys(encrypt bool) [][]byte {
+	result := c.key.Generate()
 	if encrypt {
 		return result
 	}
@@ -67,6 +68,12 @@ func (c cipher) GenerateBlocks(text string, encrypt bool) [][]byte {
 		byteList = []byte(text)
 	} else {
 		byteList, _ = hex.DecodeString(text)
+	}
+
+	remainder := len(byteList) % blockSize
+	if remainder != 0 {
+		padding := make([]byte, blockSize-remainder)
+		byteList = append(byteList, padding...)
 	}
 
 	var blocks [][]byte
@@ -95,8 +102,8 @@ func (c cipher) Rounds(block []byte, keys [][]byte, round int, encrypt bool) []b
 		x1, x2, x3, x4 = block[8:12], block[12:16], block[0:4], block[4:8]
 	}
 
-	s1 := c.substitution.Execute(x1)
-	s2 := c.substitution.Execute(x2)
+	s1 := c.substitution.Execute(x1, encrypt)
+	s2 := c.substitution.Execute(x2, encrypt)
 
 	xor := utils.CalculateXor(s1, roundKey[0])
 	add := utils.CalculateAddMod32(s2, xor)
@@ -104,8 +111,8 @@ func (c cipher) Rounds(block []byte, keys [][]byte, round int, encrypt bool) []b
 	tmp1 := utils.CalculateXor(add, roundKey[1])
 	tmp2 := utils.CalculateAddMod32(xor, tmp1)
 
-	p1 := c.permutation.Execute(tmp2)
-	p2 := c.permutation.Execute(tmp1)
+	p1 := c.permutation.Execute(tmp2, encrypt)
+	p2 := c.permutation.Execute(tmp1, encrypt)
 
 	var newX1, newX2, newX3, newX4 []byte
 	if encrypt {

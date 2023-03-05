@@ -2,8 +2,8 @@ package internal
 
 type (
 	Cipher interface {
-		Encrypt(plaintext, externalKey string) string
-		Decrypt(ciphertext, externalKey string) string
+		Encrypt(plaintext string) string
+		Decrypt(ciphertext string) string
 	}
 
 	Key interface {
@@ -11,10 +11,10 @@ type (
 	}
 
 	Substitution interface {
-		Execute(chunk []byte) []byte
+		Execute(chunk []byte, encrypt bool) []byte
 	}
 
 	Permutation interface {
-		Execute(chunk []byte) []byte
+		Execute(chunk []byte, encrypt bool) []byte
 	}
 )
