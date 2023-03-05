@@ -18,7 +18,7 @@ func NewCipher(externalKey string) internal.Cipher {
 	return &cipher{
 		substitution: NewCircularSubsitution(2),
 		permutation:  NewCircularPermutation(2),
-		key:          NewDummyKey(),
+		key:          NewKey(externalKey),
 	}
 }
 
