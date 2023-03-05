@@ -2,6 +2,7 @@ package impl
 
 import (
 	"github.com/slarkdarr/Tugas-2-Kriptografi/internal"
+	"math/rand"
 )
 
 type (
@@ -10,22 +11,34 @@ type (
 	}
 )
 
-func NewPermutation() internal.Permutation {
+func NewPermutation() internal.Executor {
+	once.Do(func() {
+		s = rand.NewSource(202303051750)
+	})
+	var pbox [32]int
+	for i := 0; i < 32; i++ {
+		pbox[i] = i
+	}
+
+	Intn := func(i int) int {
+		num64 := s.Int63()
+		num := int(num64)
+		return num % i
+	}
+
+	for k := 0; k < 16; k++ {
+		for i := 31; i > 0; i-- {
+			j := Intn(i + 1)
+			pbox[i], pbox[j] = pbox[j], pbox[i]
+		}
+	}
 	return &permutation{
-		box: [32]int{
-			31, 24, 19, 10, 12, 4, 21, 27,
-			20, 14, 28, 17, 30, 9, 1, 7,
-			23, 16, 8, 13, 25, 2, 29, 18,
-			22, 11, 3, 26, 6, 5, 15, 0,
-		},
+		box: pbox,
 	}
 }
 
-func (p *permutation) Execute(chunk []byte, encrypt bool) []byte {
+func (p *permutation) Execute(chunk []byte) []byte {
 	validatedChunk := p.validate(chunk)
-	if !encrypt {
-		return p.reverse(validatedChunk)
-	}
 	return p.forward(validatedChunk)
 }
 

@@ -1,52 +1,79 @@
 package impl
 
 import (
-	"encoding/hex"
+	"encoding/base64"
 	"github.com/slarkdarr/Tugas-2-Kriptografi/internal"
 	"github.com/slarkdarr/Tugas-2-Kriptografi/internal/utils"
 )
 
 type (
 	cipher struct {
-		substitution internal.Substitution
-		permutation  internal.Permutation
+		substitution internal.GroupExecutor
+		permutation  internal.GroupExecutor
 		key          internal.Key
 	}
 )
 
 func NewCipher(externalKey string) internal.Cipher {
 	return &cipher{
-		substitution: NewSubstitution(),
-		permutation:  NewPermutation(),
+		substitution: NewCircularSubsitution(2),
+		permutation:  NewCircularPermutation(2),
 		key:          NewDummyKey(),
 	}
 }
 
-func (c cipher) Encrypt(plaintext string) string {
+func (c *cipher) blockXOR(a, b []byte) []byte {
+	output := make([]byte, 16)
+	for i := 0; i < 16; i++ {
+		output[i] = a[i] ^ b[i]
+	}
+	return output
+}
+
+func (c *cipher) Encrypt(plaintext string) string {
+	c.permutation.ResetCount()
+	c.substitution.ResetCount()
 	keys := c.GenerateKeys(true)
 	blocks := c.GenerateBlocks(plaintext, true)
 
+	encryptedBlocks := make([][]byte, len(blocks))
+	for i := 0; i < len(blocks); i++ {
+		encryptedBlocks[i] = make([]byte, 16)
+	}
 	var result []byte
-	for _, block := range blocks {
-		result = append(result, c.Rounds(block, keys, 0, true)...)
+	for i, block := range blocks {
+		curr := make([]byte, 16)
+		copy(curr, block)
+		if i > 0 {
+			curr = c.blockXOR(curr, encryptedBlocks[i-1])
+		}
+		resultBlock := c.Rounds(curr, keys, 0, true)
+		copy(encryptedBlocks[i], resultBlock)
+		result = append(result, resultBlock...)
 	}
 
-	return hex.EncodeToString(result)
+	return base64.StdEncoding.EncodeToString(result)
 }
 
-func (c cipher) Decrypt(ciphertext string) string {
+func (c *cipher) Decrypt(ciphertext string) string {
+	c.permutation.ResetCount()
+	c.substitution.ResetCount()
 	keys := c.GenerateKeys(false)
 	blocks := c.GenerateBlocks(ciphertext, false)
 
 	var result []byte
-	for _, block := range blocks {
-		result = append(result, c.Rounds(block, keys, 0, false)...)
+	for i, block := range blocks {
+		resultBlock := c.Rounds(block, keys, 0, false)
+		if i > 0 {
+			resultBlock = c.blockXOR(resultBlock, blocks[i-1])
+		}
+		result = append(result, resultBlock...)
 	}
 
 	return string(result)
 }
 
-func (c cipher) GenerateKeys(encrypt bool) [][]byte {
+func (c *cipher) GenerateKeys(encrypt bool) [][]byte {
 	result := c.key.Generate()
 	if encrypt {
 		return result
@@ -60,14 +87,14 @@ func (c cipher) GenerateKeys(encrypt bool) [][]byte {
 	return keyList
 }
 
-func (c cipher) GenerateBlocks(text string, encrypt bool) [][]byte {
+func (c *cipher) GenerateBlocks(text string, encrypt bool) [][]byte {
 	blockSize := 16
 
 	var byteList []byte
 	if encrypt {
 		byteList = []byte(text)
 	} else {
-		byteList, _ = hex.DecodeString(text)
+		byteList, _ = base64.StdEncoding.DecodeString(text)
 	}
 
 	remainder := len(byteList) % blockSize
@@ -88,7 +115,7 @@ func (c cipher) GenerateBlocks(text string, encrypt bool) [][]byte {
 	return blocks
 }
 
-func (c cipher) Rounds(block []byte, keys [][]byte, round int, encrypt bool) []byte {
+func (c *cipher) Rounds(block []byte, keys [][]byte, round int, encrypt bool) []byte {
 	if round >= 16 {
 		return block
 	}
@@ -102,8 +129,8 @@ func (c cipher) Rounds(block []byte, keys [][]byte, round int, encrypt bool) []b
 		x1, x2, x3, x4 = block[8:12], block[12:16], block[0:4], block[4:8]
 	}
 
-	s1 := c.substitution.Execute(x1, encrypt)
-	s2 := c.substitution.Execute(x2, encrypt)
+	s1 := c.substitution.Execute(x1)
+	s2 := c.substitution.Execute(x2)
 
 	xor := utils.CalculateXor(s1, roundKey[0])
 	add := utils.CalculateAddMod32(s2, xor)
@@ -111,8 +138,8 @@ func (c cipher) Rounds(block []byte, keys [][]byte, round int, encrypt bool) []b
 	tmp1 := utils.CalculateXor(add, roundKey[1])
 	tmp2 := utils.CalculateAddMod32(xor, tmp1)
 
-	p1 := c.permutation.Execute(tmp2, encrypt)
-	p2 := c.permutation.Execute(tmp1, encrypt)
+	p1 := c.permutation.Execute(tmp2)
+	p2 := c.permutation.Execute(tmp1)
 
 	var newX1, newX2, newX3, newX4 []byte
 	if encrypt {

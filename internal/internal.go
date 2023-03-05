@@ -10,11 +10,12 @@ type (
 		Generate() [][]byte
 	}
 
-	Substitution interface {
-		Execute(chunk []byte, encrypt bool) []byte
+	Executor interface {
+		Execute(chunk []byte) []byte
 	}
 
-	Permutation interface {
-		Execute(chunk []byte, encrypt bool) []byte
+	GroupExecutor interface {
+		Executor
+		ResetCount()
 	}
 )
